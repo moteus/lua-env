@@ -1,0 +1,41 @@
+INSTALL_DIR = INSTALL_DIR or J(ENV.LUA_DIR,'libs','ENV')
+WINVER      = IF(WINDOWS, WINVER or '501', '')
+
+DEFS = L{
+  IF(DEBUG,   {'_DEBUG', 'DEBUG'},'NDEBUG');
+  IF(WINDOWS, {'WIN32','_WIN32','_WINDOWS'});
+  IF(MSVC,    {'_CRT_SECURE_NO_WARNINGS', '_WIN32_WINNT=0x' .. WINVER});
+  IF(WINDOWS, {'ENV_EXPORT_WIN'});
+}
+
+env =  c.shared{'env',
+  base     = 'src';
+  defines  = DEFS;
+  needs    = 'lua';
+  libflags = IF(MSVC, '/DEF:' .. J('src', 'env.def')); -- lake 1.2.30 do not find this file
+  libs     = IF(WINDOWS, 'user32');
+}
+
+target('build',{env})
+
+install = target('install', {
+  file.group{odir=J(INSTALL_DIR, 'lua'); 
+    src = J('lua','*.*');recurse=true;
+  };
+  file.group{odir=J(INSTALL_DIR, 'test'); 
+    src = J('test','*.*');recurse=true;
+  };
+  target(J(INSTALL_DIR, 'bin', 'ENV', 'core' .. DLL_EXT),   env,   CP );
+})
+
+target('test', install, function()
+  local file = J(INSTALL_DIR,'test','test.lua')
+  print("run " .. file)
+  if not TESTING then 
+    lake.chdir(J(INSTALL_DIR,'test'))
+    os.execute( LUA_EXE .. ' ' .. file )
+    lake.chdir('<')
+  end
+end)
+
+default('build')

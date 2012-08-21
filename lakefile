@@ -19,13 +19,13 @@ env =  c.shared{'env',
 target('build',{env})
 
 install = target('install', {
-  file.group{odir=J(INSTALL_DIR, 'lua'); 
+  file.group{odir=J(INSTALL_DIR, 'shared'); 
     src = J('lua','*.*');recurse=true;
   };
   file.group{odir=J(INSTALL_DIR, 'test'); 
     src = J('test','*.*');recurse=true;
   };
-  target(J(INSTALL_DIR, 'bin', 'ENV', 'core' .. DLL_EXT),   env,   CP );
+  target(J(INSTALL_DIR, 'shared', 'ENV', 'core' .. DLL_EXT),   env,   CP );
 })
 
 target('test', install, function()

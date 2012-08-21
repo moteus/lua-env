@@ -497,7 +497,13 @@ static const struct luaL_Reg env_lib [] = {
 
 int luaopen_env (lua_State *L) {
   lua_newtable(L);
+
+#if LUA_VERSION_NUM >= 502 
+  luaL_setfuncs(L, env_lib, 0);
+#else 
   luaL_openlib(L, NULL, env_lib, 0);
+#endif
+
   return 1;
 }
 

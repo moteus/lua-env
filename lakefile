@@ -1,4 +1,12 @@
-INSTALL_DIR = INSTALL_DIR or J(ENV.LUA_DIR,'libs','ENV')
+if LUA_VER == '5.2' then
+  LUA_NEED = 'lua52'
+  LUA_DIR  = ENV.LUA_DIR_5_2 or ENV.LUA_DIR
+else
+  LUA_NEED = 'lua'
+  LUA_DIR  = ENV.LUA_DIR
+end
+
+INSTALL_DIR = INSTALL_DIR or J(LUA_DIR,'libs','ENV')
 WINVER      = IF(WINDOWS, WINVER or '501', '')
 
 DEFS = L{
@@ -11,21 +19,20 @@ DEFS = L{
 env =  c.shared{'env',
   base     = 'src';
   defines  = DEFS;
-  needs    = 'lua';
-  libflags = IF(MSVC, '/DEF:' .. J('src', 'env.def')); -- lake 1.2.30 do not find this file
+  needs    = LUA_NEED;
   libs     = IF(WINDOWS, 'user32');
 }
 
 target('build',{env})
 
 install = target('install', {
-  file.group{odir=J(INSTALL_DIR, 'shared'); 
+  file.group{odir=J(INSTALL_DIR, 'share'); 
     src = J('lua','*.*');recurse=true;
   };
   file.group{odir=J(INSTALL_DIR, 'test'); 
     src = J('test','*.*');recurse=true;
   };
-  target(J(INSTALL_DIR, 'shared', 'ENV', 'core' .. DLL_EXT),   env,   CP );
+  target(J(INSTALL_DIR, 'share', 'ENV', 'core' .. DLL_EXT),   env,   CP );
 })
 
 target('test', install, function()

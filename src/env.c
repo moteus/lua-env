@@ -262,10 +262,19 @@ static int l_setenv_win(lua_State *L){
 }
 
 static int l_update_win(lua_State *L){
-  lua_pushnumber(L,
-    SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, 0)
+  DWORD dwReturnValue;
+  LRESULT ret = SendMessageTimeout(HWND_BROADCAST, WM_SETTINGCHANGE, 0,
+    (LPARAM) "Environment", SMTO_ABORTIFHUNG,
+    5000, &dwReturnValue
   );
-  return 1;
+  if(ret){
+    lua_pushnumber(L,dwReturnValue);
+    return 1;
+  }
+
+  lua_pushnil(L);
+  push_lasterr(L,"\"updateenv\"");
+  return 2;
 }
 
 #endif // ENV_EXPORT_WIN

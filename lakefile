@@ -6,6 +6,7 @@ else
   LUA_DIR  = ENV.LUA_DIR
 end
 
+DYNAMIC  = DYNAMIC or false
 INSTALL_DIR = INSTALL_DIR or J(LUA_DIR,'libs','ENV')
 WINVER      = IF(WINDOWS, WINVER or '501', '')
 
@@ -21,6 +22,7 @@ env =  c.shared{'env',
   defines  = DEFS;
   needs    = LUA_NEED;
   libs     = IF(WINDOWS, 'user32');
+  dynamic  = DYNAMIC;
 }
 
 target('build',{env})

@@ -1,14 +1,24 @@
-if LUA_VER == '5.2' then
+PROJECT = 'env'
+
+if LUA_VER == '5.3' then
+  LUA_NEED = 'lua53'
+  LUA_DIR  = ENV.LUA_DIR_5_3 or ENV.LUA_DIR
+  LUA_RUNNER = 'lua53'
+elseif LUA_VER == '5.2' then
   LUA_NEED = 'lua52'
   LUA_DIR  = ENV.LUA_DIR_5_2 or ENV.LUA_DIR
+  LUA_RUNNER = 'lua52'
 else
-  LUA_NEED = 'lua'
+  LUA_NEED = 'lua51'
   LUA_DIR  = ENV.LUA_DIR
+  LUA_RUNNER = 'lua'
 end
 
-DYNAMIC  = DYNAMIC or false
-INSTALL_DIR = INSTALL_DIR or J(LUA_DIR,'libs','ENV')
-WINVER      = IF(WINDOWS, WINVER or '501', '')
+ROOT    = ROOT or J(LUA_DIR,'libs',PROJECT)
+LUADIR  = LUADIR or J(ROOT, 'share')
+LIBDIR  = LIBDIR or J(ROOT, 'share')
+DYNAMIC = as_bool(DYNAMIC, false)
+WINVER  = IF(WINDOWS, WINVER or '501', '')
 
 DEFS = L{
   IF(DEBUG,   {'_DEBUG', 'DEBUG'},'NDEBUG');
@@ -17,34 +27,31 @@ DEFS = L{
   IF(WINDOWS, {'ENV_EXPORT_WIN'});
 }
 
-env =  c.shared{'env',
+env =  c.shared{'core',
   base     = 'src';
+  src      = {PROJECT .. '.c'};
   defines  = DEFS;
   needs    = LUA_NEED;
   libs     = IF(WINDOWS, 'user32');
+  libflags = IF(MSVC, L{
+    '/EXPORT:luaopen_env',
+    '/EXPORT:luaopen_env_core',
+    '/EXPORT:luaopen_ENV_core',
+  });
   dynamic  = DYNAMIC;
 }
 
-target('build',{env})
+target('build', env)
 
 install = target('install', {
-  file.group{odir=J(INSTALL_DIR, 'share'); 
-    src = J('lua','*.*');recurse=true;
-  };
-  file.group{odir=J(INSTALL_DIR, 'test'); 
-    src = J('test','*.*');recurse=true;
-  };
-  target(J(INSTALL_DIR, 'share', 'ENV', 'core' .. DLL_EXT),   env,   CP );
+  file.group{odir=LUADIR;             src = J('lua', '*.*'); recurse = true; };
+  file.group{odir=J(LIBDIR, PROJECT); src = env                              };
+  file.group{odir=J(ROOT, 'test');    src = J('test','*.*'); recurse = true; };
 })
 
 target('test', install, function()
-  local file = J(INSTALL_DIR,'test','test.lua')
-  print("run " .. file)
-  if not TESTING then 
-    lake.chdir(J(INSTALL_DIR,'test'))
-    os.execute( LUA_EXE .. ' ' .. file )
-    lake.chdir('<')
-  end
+  run_test("test.lua")
 end)
 
 default('build')
+

@@ -504,7 +504,7 @@ static const struct luaL_Reg env_lib [] = {
   {NULL, NULL}  /* sentinel */
 };
 
-int luaopen_env (lua_State *L) {
+LUALIB_API int luaopen_env (lua_State *L) {
   lua_newtable(L);
 
 #if LUA_VERSION_NUM >= 502 
@@ -514,5 +514,13 @@ int luaopen_env (lua_State *L) {
 #endif
 
   return 1;
+}
+
+LUALIB_API int luaopen_env_core (lua_State *L) {
+  return luaopen_env(L);
+}
+
+LUALIB_API int luaopen_ENV_core (lua_State *L) {
+  return luaopen_env(L);
 }
 
